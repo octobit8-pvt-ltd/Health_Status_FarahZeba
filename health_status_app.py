@@ -1,0 +1,43 @@
+import requests
+import json
+# Function to get Jenkins health status
+def get_jenkins_health_status(jenkins_url, user, api_token):
+    try:
+        response = requests.get(f'{jenkins_url}/api/json', auth=(user, api_token))
+        response.raise_for_status()
+        data = response.json()
+        overall_health = data.get('overallLoad', {}).get('load', 'UNKNOWN')
+        return overall_health
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching Jenkins health status: {e}")
+        return 'UNKNOWN'
+# Function to send Slack notification
+def send_slack_notification(webhook_url, message):
+    payload = {
+        "text": message
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    try:
+        response = requests.post(webhook_url, data=json.dumps(payload), headers=headers)
+        response.raise_for_status()
+        print("Successfully sent Slack notification")
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending Slack notification: {e}")
+# Main function
+def main():
+    # Jenkins details
+    jenkins_url = 'http://localhost:8080/user/zebafarah/'
+    user = 'zebafarah'
+    api_token = '1157b31a1dfc4849e732afb274388d0928'
+    # Slack webhook URL
+    slack_webhook_url = 'https://hooks.slack.com/services/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'
+    # Get Jenkins health status
+    health_status = get_jenkins_health_status(jenkins_url, user, api_token)
+    # Prepare Slack notification message
+    message = f"Jenkins Health Status: {health_status}"
+    # Send Slack notification
+    send_slack_notification(slack_webhook_url, message)
+if __name__ == "__main__":
+    main()
